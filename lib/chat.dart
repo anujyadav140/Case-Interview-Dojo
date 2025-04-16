@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 class ChatApp extends StatelessWidget {
   const ChatApp({super.key});
@@ -107,7 +108,7 @@ class _ChatPageState extends State<ChatPage> {
             Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-              color: Colors.white,
+              color: Colors.transparent,
               child: Row(
                 children: [
                   Expanded(
@@ -130,7 +131,7 @@ class _ChatPageState extends State<ChatPage> {
                   IconButton(
                     icon: const Icon(Icons.send),
                     onPressed: _sendMessage,
-                    color: Theme.of(context).primaryColor,
+                    color: Colors.blue,
                   ),
                 ],
               ),

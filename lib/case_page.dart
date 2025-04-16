@@ -14,13 +14,8 @@ class CaseInterviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Calculate fixed divider width: left padding (8) + divider (1) + right padding (8)
-    final dividerWidth = 8.0 + 1.0 + 8.0; // 17.0 pixels
-    // The left and right pane share the remaining width.
-    final leftRightInitial = (screenWidth - dividerWidth) / 2;
-    // Minimum width is set to 25% of the screen width for left and right panes.
-    final minPaneWidth = screenWidth * 0.25;
+    // Define fixed divider width: left padding (8) + divider (1) + right padding (8)
+    const dividerWidth = 17.0;
 
     return Scaffold(
       headers: [
@@ -42,47 +37,36 @@ class CaseInterviewPage extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: OutlinedContainer(
           clipBehavior: Clip.antiAlias,
-          child: ResizablePanel.horizontal(
+          child: Row(
             children: [
-              // Left Pane: Dynamic Stepper with Quill documents
-              ResizablePane(
-                initialSize: leftRightInitial,
-                minSize: minPaneWidth,
-                // Pass the dynamic step count (for example, 3 steps) or use a value from caseInterview.
+              // Left Pane: occupies 70% of the available width
+              Expanded(
+                flex: 7,
                 child: Document(numberOfSteps: 3),
               ),
-              // Divider Pane: fixed size with padding and a vertical divider.
-              ResizablePane(
-                initialSize: dividerWidth,
-                minSize: dividerWidth,
-                maxSize: dividerWidth,
-                child: Container(
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      SizedBox(width: 8),
-                      VerticalDivider(
-                        width: 1,
-                        thickness: 1,
-                        color: Colors.gray,
-                      ),
-                      SizedBox(width: 8),
-                    ],
-                  ),
+              // Divider Pane: fixed width with a vertical divider.
+              Container(
+                width: dividerWidth,
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    SizedBox(width: 8),
+                    VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: Colors.gray,
+                    ),
+                    SizedBox(width: 8),
+                  ],
                 ),
               ),
-              // Right Pane: Chat UI (placeholder)
-              ResizablePane(
-                initialSize: leftRightInitial,
-                minSize: minPaneWidth,
+              // Right Pane: occupies 30% of the available width
+              Expanded(
+                flex: 3,
                 child: Container(
                   color: Colors.gray[200],
                   child: const Center(
-                    // child: Text(
-                    //   'Chat interface coming soon.',
-                    //   style: TextStyle(fontSize: 16),
-                    // ),
                     child: ChatPage(),
                   ),
                 ),
@@ -128,7 +112,7 @@ class _DocumentState extends State<Document> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate 70% of the screen height dynamically.
+    // Calculate 70% of the screen height dynamically for the editor.
     final screenHeight = MediaQuery.of(context).size.height;
     return Stepper(
       controller: controller,
@@ -138,49 +122,60 @@ class _DocumentState extends State<Document> {
           title: Text('Step ${index + 1}'),
           contentBuilder: (context) {
             return StepContainer(
-                actions: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (index > 0)
-                    SecondaryButton(
-                      child: const Text('Prev'),
-                      onPressed: () {
+              actions: [
+                if (index > 0)
+                  SecondaryButton(
+                    child: const Text('Prev'),
+                    onPressed: () {
                       controller.previousStep();
-                      },
-                    ),
-                    SizedBox(width: 15),
-                    if (index < widget.numberOfSteps - 1)
-                    PrimaryButton(
-                      child: const Text('Next'),
-                      onPressed: () {
-                      controller.nextStep();
-                      },
-                    )
-                    else
-                    PrimaryButton(
-                      child: const Text('Finish'),
-                      onPressed: () {
-                      controller.nextStep();
-                      },
-                    ),
-                  ],
+                    },
                   ),
-                ),
-                ],
+                const SizedBox(width: 15),
+                if (index < widget.numberOfSteps - 1)
+                  PrimaryButton(
+                    child: const Text('Next'),
+                    onPressed: () {
+                      controller.nextStep();
+                    },
+                  )
+                else
+                  PrimaryButton(
+                    child: const Text('Finish'),
+                    onPressed: () {
+                      controller.nextStep();
+                    },
+                  ),
+              ],
               child: Column(
                 children: [
                   QuillSimpleToolbar(
                     controller: _quillControllers[index],
-                    config: const QuillSimpleToolbarConfig(),
+                    config: QuillSimpleToolbarConfig(
+                      buttonOptions: QuillSimpleToolbarButtonOptions(
+                        base: QuillToolbarBaseButtonOptions(
+                          iconTheme: QuillIconTheme(
+                            iconButtonSelectedData:  IconButtonData(
+                              color: Colors.black,
+                            ),
+                          )
+                        )
+                      ),
+                      showAlignmentButtons: false,
+                      showBackgroundColorButton: false,
+                      showHeaderStyle: false,
+                      showUndo: true,
+                      showRedo: true,
+                      showSubscript: false,
+                      showSuperscript: false,
+                    ),
                   ),
                   SizedBox(
                     height: screenHeight * 0.60,
                     child: QuillEditor.basic(
                       controller: _quillControllers[index],
-                      config: const QuillEditorConfig(),
+                      config: const QuillEditorConfig(
+
+                      ),
                     ),
                   ),
                 ],
