@@ -1,4 +1,4 @@
-# bartleby
+# Case Interview Dojo
 
 A new Flutter project.
 
