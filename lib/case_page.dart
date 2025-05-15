@@ -1,11 +1,7 @@
-import 'dart:convert';
-import 'dart:ui';
 import 'package:bartleby/chat.dart';
 import 'package:bartleby/home.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:bartleby/components/numberedcontainer.dart';
 
 class CaseInterviewPage extends StatelessWidget {
   final CaseInterview caseInterview;
@@ -66,8 +62,10 @@ class CaseInterviewPage extends StatelessWidget {
                 flex: 3,
                 child: Container(
                   color: Colors.gray[200],
-                  child: const Center(
-                    child: ChatPage(),
+                  child: Center(
+                    child: ChatPage(onSpeechResult: (value) {
+                      
+                    },),
                   ),
                 ),
               ),
@@ -119,33 +117,44 @@ class _DocumentState extends State<Document> {
       direction: Axis.horizontal,
       steps: List.generate(widget.numberOfSteps, (index) {
         return Step(
-          title: Text('Step ${index + 1}'),
+          title: Text('Question ${index + 1}'),
           contentBuilder: (context) {
             return StepContainer(
-              actions: [
-                if (index > 0)
-                  SecondaryButton(
-                    child: const Text('Prev'),
-                    onPressed: () {
-                      controller.previousStep();
-                    },
+                actions: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 30, left: 20.0),
+                  child: Column(
+                  children: [
+                    Row(
+                    children: [
+                      if (index > 0)
+                      SecondaryButton(
+                        child: const Text('Prev'),
+                        onPressed: () {
+                        controller.previousStep();
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      if (index < widget.numberOfSteps - 1)
+                      PrimaryButton(
+                        child: const Text('Next'),
+                        onPressed: () {
+                        controller.nextStep();
+                        },
+                      )
+                      else
+                      PrimaryButton(
+                        child: const Text('Finish'),
+                        onPressed: () {
+                        controller.nextStep();
+                        },
+                      ),
+                    ],
+                    ),
+                  ],
                   ),
-                const SizedBox(width: 15),
-                if (index < widget.numberOfSteps - 1)
-                  PrimaryButton(
-                    child: const Text('Next'),
-                    onPressed: () {
-                      controller.nextStep();
-                    },
-                  )
-                else
-                  PrimaryButton(
-                    child: const Text('Finish'),
-                    onPressed: () {
-                      controller.nextStep();
-                    },
-                  ),
-              ],
+                ),
+                ],
               child: Column(
                 children: [
                   QuillSimpleToolbar(
