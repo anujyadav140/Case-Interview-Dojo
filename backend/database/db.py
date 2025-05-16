@@ -1,53 +1,12 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List, Optional
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI(title="McKinsey Case Interviews API")
-
-# Allow all origins during development
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class Question(BaseModel):
-
-    text: str
-    hints: Optional[List[str]] = []
-    reveal_answer: str
-
-
-class Description(BaseModel):
-
-    client_name: str
-    client_goal: str
-    client_description: str
-    situation_description: str
-    company_study: Optional[str] = None
-    global_hints: Optional[List[str]] = []
-    questions: List[Question]
-
-
-class CaseInterview(BaseModel):
-
-    name: str
-    company: str
-    source: str
-    url: str
-    description: Description
-
-
+from backend.database.models import CaseInterview, Description, Question
+from typing import List
 
 cases: List[CaseInterview] = [
    CaseInterview(
     name="Practice Case",
     company="Beautify",
     source="McKinsey Study",
-    url="",
+    url="https://www.mckinsey.com/careers/interviewing/beautify",
     description=Description(
         client_name="Beautify",
         client_goal=(
@@ -135,11 +94,3 @@ cases: List[CaseInterview] = [
     )
 ),
 ]
-
-
-@app.get("/cases", response_model=List[CaseInterview])
-async def get_cases():
-    """
-    Returns a list of McKinsey case interviews with detailed descriptions.
-    """
-    return cases
