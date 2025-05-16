@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 from typing import List, Dict
+from pydantic import BaseModel
 from backend.database.models import ChatMessage, CaseInterview 
 from backend.database.db import cases 
-from backend.services.llm_service import get_ai_response, generate_session_summary
+from backend.services.llm_service import get_ai_response_initial, get_ai_response_follow_up, gen_ai_response_question, gen_ai_response_answer, gen_ai_response_analysis
 
 router = APIRouter()
 
@@ -14,14 +15,14 @@ DEFAULT_SYSTEM_PROMPT = (
     "Maintain a professional and supportive tone."
 )
 
-class ChatInteractionRequest(ChatMessage):
-    """Model for the user's message in a chat interaction."""
-    pass
+# class ChatInteractionRequest(ChatMessage):
+#     """Model for the user's message in a chat interaction."""
+#     pass
 
-class ChatInteractionResponse(ChatMessage):
-    """Model for the AI's response in a chat interaction."""
-    pass
+# class ChatInteractionResponse(ChatMessage):
+#     """Model for the AI's response in a chat interaction."""
+#     pass
 
-class SessionSummaryResponse(BaseModel):
-    summary: str
+# class SessionSummaryResponse(BaseModel):
+#     summary: str
 

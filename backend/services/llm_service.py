@@ -2,8 +2,12 @@ import os
 from openai import OpenAI, APIError
 from dotenv import load_dotenv
 from typing import List, Dict, Optional
+from pathlib import Path
 
-load_dotenv()
+# Load environment variables from .env file explicitly
+# Assumes .env file is in the 'backend' directory, one level up from 'services'
+dotenv_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=dotenv_path)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
