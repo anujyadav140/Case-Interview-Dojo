@@ -5,14 +5,14 @@ from typing import List
 
 router = APIRouter()
 
-@router.get("/cases", response_model=List[CaseInterview])
+@router.get("/", response_model=List[CaseInterview])
 async def get_cases():
     """
     Returns a list of McKinsey case interviews with detailed descriptions.
     """
     return cases
 
-@router.get("/cases/{case_id}", response_model=CaseInterview)
+@router.get("/{case_id}", response_model=CaseInterview)
 async def get_case(case_id: str):
     """
     Returns a specific McKinsey case interview by ID.

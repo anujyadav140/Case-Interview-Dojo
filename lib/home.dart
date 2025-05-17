@@ -1,29 +1,35 @@
 import 'dart:convert';
 import 'dart:ui';
+// import 'package:flutter/material.dart';
 import 'package:bartleby/case_page.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:http/http.dart' as http;
-
 
 class CaseInterview {
   final String name;
   final String source;
   final String? url;
   final String? description;
+  final String? situationDescription;  // <-- new field
 
   CaseInterview({
     required this.name,
     required this.source,
     this.url,
     this.description,
+    this.situationDescription,
   });
 
   factory CaseInterview.fromJson(Map<String, dynamic> json) {
+    final desc = json['description'] as Map<String, dynamic>?;
     return CaseInterview(
-      name: json['name'],
-      source: json['source'],
-      url: json['url'],
-      description: json['description'],
+      name: json['name'] as String,
+      source: json['source'] as String,
+      url: json['url'] as String?,
+      // if you still want to show the old blob:
+      description: desc?['client_description'] as String?,
+      // grab the situation_description:
+      situationDescription: desc?['situation_description'] as String?,
     );
   }
 }
@@ -48,13 +54,14 @@ class _HomePageState extends State<HomePage> {
     final response = await http.get(Uri.parse('http://127.0.0.1:8000/cases'));
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
-      return data.map((e) => CaseInterview.fromJson(e)).toList();
+      return data
+          .map((e) => CaseInterview.fromJson(e as Map<String, dynamic>))
+          .toList();
     } else {
       throw Exception('Failed to load cases');
     }
   }
 
-  // Show an alert dialog displaying the case description in a wider layout.
   Future<void> _showCaseDescriptionDialog(CaseInterview caseItem) async {
     final bool? shouldProceed = await showDialog<bool>(
       context: context,
@@ -62,26 +69,40 @@ class _HomePageState extends State<HomePage> {
         return AlertDialog(
           title: Text(caseItem.name),
           content: SizedBox(
-            width: 400, // Wider dialog width.
+            width: 400,
             child: SingleChildScrollView(
-              child: Text(
-                caseItem.description ?? 'No description available.',
-                style: const TextStyle(fontSize: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (caseItem.situationDescription != null) ...[
+                    Text(
+                      'Situation',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      caseItem.situationDescription!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const Divider(height: 24),
+                  ],
+                  Text(
+                    caseItem.description ?? 'No description available.',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
               ),
             ),
           ),
           actions: [
             OutlineButton(
               child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
+              onPressed: () => Navigator.of(context).pop(false),
             ),
             PrimaryButton(
               child: const Text('Proceed'),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
+              onPressed: () => Navigator.of(context).pop(true),
             ),
           ],
         );
@@ -98,7 +119,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Show the search dialog with the Command widget.
   Future<void> _showSearchDialog() async {
     await showDialog(
       context: context,
@@ -107,15 +127,14 @@ class _HomePageState extends State<HomePage> {
           title: const Text('Search Case Interviews'),
           content: Command(
             builder: (context, query) async* {
-              // Await the list of case interviews.
               final cases = await _casesFuture;
-              // Filter the cases based on the search query.
               final filtered = cases.where((caseItem) {
                 if (query == null || query.isEmpty) return true;
-                return caseItem.name.toLowerCase().contains(query.toLowerCase());
+                return caseItem.name
+                    .toLowerCase()
+                    .contains(query.toLowerCase());
               }).toList();
 
-              // If there are results, yield a CommandCategory with the filtered items.
               if (filtered.isNotEmpty) {
                 yield [
                   CommandCategory(
@@ -125,9 +144,7 @@ class _HomePageState extends State<HomePage> {
                         title: Text(caseItem.name),
                         trailing: Text(caseItem.source),
                         onTap: () {
-                          // Close the search dialog.
                           Navigator.of(context).pop();
-                          // Then show the case description alert dialog.
                           _showCaseDescriptionDialog(caseItem);
                         },
                       );
@@ -135,7 +152,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ];
               } else {
-                // If no matches, yield an empty list.
                 yield [];
               }
             },
@@ -161,7 +177,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
           trailing: [
-            // Updated search icon to trigger the search dialog.
             OutlineButton(
               onPressed: _showSearchDialog,
               density: ButtonDensity.icon,
@@ -187,12 +202,13 @@ class _HomePageState extends State<HomePage> {
             } else {
               final cases = snapshot.data!;
               return ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                  },
-                ),
+                behavior: ScrollConfiguration.of(context)
+                    .copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.mouse,
+                      },
+                    ),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: IntrinsicHeight(
@@ -204,7 +220,8 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           for (var caseItem in cases)
                             CardImage(
-                              onPressed: () => _showCaseDescriptionDialog(caseItem),
+                              onPressed: () =>
+                                  _showCaseDescriptionDialog(caseItem),
                               image: Image.network(
                                 'https://picsum.photos/200/300?random=${caseItem.name.hashCode}',
                                 fit: BoxFit.cover,
@@ -212,8 +229,8 @@ class _HomePageState extends State<HomePage> {
                               title: Text(caseItem.name),
                               subtitle: Text(caseItem.source),
                             ),
-                        ],
-                      ).gap(16),
+                        ]
+                      ),
                     ),
                   ),
                 ),
