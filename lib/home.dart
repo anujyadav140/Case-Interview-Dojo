@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showCaseDescriptionDialog(CaseInterview caseItem) async {
-    final bool? shouldProceed = await showDialog<bool>(
+    final Object? dialogResult = await showDialog<Object?>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -105,19 +105,20 @@ class _HomePageState extends State<HomePage> {
             ),
             PrimaryButton(
               child: const Text('Proceed'),
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Navigator.of(context).pop(caseItem.id), // Return caseId
             ),
           ],
         );
       },
     );
 
-    if (shouldProceed == true) {
-      Navigator.push(
+    // dialogResult will now be the caseId string or null/false
+    if (dialogResult != null && dialogResult is String) {
+      final String caseId = dialogResult; // Explicitly type caseId as String
+      Navigator.pushNamed(
         context,
-        MaterialPageRoute(
-          builder: (context) => CaseInterviewPage(caseInterview: caseItem),
-        ),
+        '/cases/$caseId',
+        arguments: caseItem,
       );
     }
   }
