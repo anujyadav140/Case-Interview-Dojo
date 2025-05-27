@@ -10,7 +10,6 @@ dotenv_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=dotenv_path)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY not found in environment variables. Please set it in your .env file.")
 
@@ -43,13 +42,13 @@ async def get_ai_response_initial(
     """   
     input = f"Current case context: {current_case_context}"
     try:
-        response = await client.reponses.create(
+        response = client.responses.create(
             model=model,
             input= input,
             instructions=instructions,
             temperature=temperature,
         )
-        print(response)
+        # print(response)
         response_id = response.id
         ai_message = response.output_text
         return {"response_id": response_id, "ai_message": ai_message.strip()}
@@ -103,7 +102,7 @@ async def get_ai_response_follow_up(
     else:
         input = [{"role": "user", "content": curr_message}]
     try:
-        response = await client.reponses.create(
+        response = await client.responses.create(
             model=model,
             previous_response_id=response_id,
             input=input,
@@ -151,7 +150,7 @@ async def gen_ai_response_question(
     """
     input = [{"role": "user", "content": question}, {"role": "user", "content": answer}] # ig question and answer are not to be provided with role as user, will see later
     try:
-        response = await client.reponses.create(
+        response = await client.responses.create(
             model=model,
             previous_response_id=response_id,
             input=input,
@@ -190,7 +189,7 @@ async def gen_ai_response_answer(
     """
     input = [{"role": "user", "content": question}, {"role": "user", "content": answer}]
     try:
-        response = await client.reponses.create(    
+        response = await client.responses.create(
             model=model,
             previous_response_id=response_id,
             input=input,
@@ -223,7 +222,7 @@ async def gen_ai_response_analysis(
     """
     input = [{"role": "user", "content": question}, {"role": "user", "content": answer}]
     try:
-        response = await client.reponses.create(
+        response = await client.responses.create(
             model=model,
             previous_response_id=response_id,
             input=input,
