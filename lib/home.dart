@@ -6,6 +6,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:http/http.dart' as http;
 
 class CaseInterview {
+  final String id;
   final String name;
   final String source;
   final String? url;
@@ -13,6 +14,7 @@ class CaseInterview {
   final String? situationDescription;  // <-- new field
 
   CaseInterview({
+    required this.id,
     required this.name,
     required this.source,
     this.url,
@@ -23,6 +25,7 @@ class CaseInterview {
   factory CaseInterview.fromJson(Map<String, dynamic> json) {
     final desc = json['description'] as Map<String, dynamic>?;
     return CaseInterview(
+      id: json['id'] as String,
       name: json['name'] as String,
       source: json['source'] as String,
       url: json['url'] as String?,

@@ -32,3 +32,17 @@ class CaseInterview(BaseModel):
 class ChatMessage(BaseModel):
     role: str  # "user", "assistant", or "system"
     content: str
+
+class InitialChatRequest(BaseModel):
+    case_id: str
+
+class FollowUpChatRequest(BaseModel):
+    case_id: str # Good to keep for context, even if response_id is primary
+    response_id: str # The ID from the previous LLM response
+    user_message: str
+    # You might add current_question_index or other stateful info here
+
+class AIResponseMessage(BaseModel):
+    response_id: Optional[str] = None # The new ID from the LLM for follow-up
+    ai_message: str
+

@@ -52,13 +52,13 @@ async def get_ai_response_initial(
         print(response)
         response_id = response.id
         ai_message = response.output_text
-        return ai_message.strip() if ai_message else "Sorry, I couldn't generate a response."
+        return {"response_id": response_id, "ai_message": ai_message.strip()}
     except APIError as e:
         print(f"OpenAI API Error: {e}")
-        return f"Error communicating with AI: {e.strerror or str(e)}"
+        return {"response_id": None, "ai_message": f"Error communicating with AI: {e.strerror or str(e)}"}
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        return "An unexpected error occurred while trying to get an AI response."
+        return {"response_id": None, "ai_message": "An unexpected error occurred while trying to get an AI response."}
 
 
 # THIS IS WHERE THE WEBSOCKET CONNECTION WILL BE MADE, these apis will be now "streamed"
