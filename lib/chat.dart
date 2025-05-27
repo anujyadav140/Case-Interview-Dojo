@@ -20,7 +20,15 @@ class ChatApp extends StatelessWidget {
 
 class ChatPage extends StatefulWidget {
   final ValueChanged<String> onSpeechResult;
-  const ChatPage({super.key, required this.onSpeechResult});
+  final String? initialAiMessage;
+  final String? initialResponseId;
+
+  const ChatPage({
+    super.key,
+    required this.onSpeechResult,
+    this.initialAiMessage,
+    this.initialResponseId,
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -42,15 +50,54 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   bool _isListening = false;
   double _soundLevel = 0.0;
   String _speechText = ''; // holds all speech-to-text results
+  String? _currentResponseId;
+  bool _initialMessageAdded = false;
 
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
+    _currentResponseId = widget.initialResponseId;
+
+    // Add initial AI message if available and not already added
+    if (widget.initialAiMessage != null && !_initialMessageAdded) {
+      // Using WidgetsBinding.instance.addPostFrameCallback to ensure messages are added after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) { // Check if the widget is still in the tree
+          _sendMessage(widget.initialAiMessage!, isMe: false);
+          setState(() {
+            _initialMessageAdded = true;
+          });
+        }
+      });
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showMicPermissionDialog();
+      if (mounted) { // Ensure widget is mounted before showing dialog
+        _showMicPermissionDialog();
+      }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialResponseId != oldWidget.initialResponseId) {
+      setState(() {
+        _currentResponseId = widget.initialResponseId;
+      });
+    }
+    // Add initial AI message if it's newly available and not already added
+    if (widget.initialAiMessage != null && widget.initialAiMessage != oldWidget.initialAiMessage && !_initialMessageAdded) {
+       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _sendMessage(widget.initialAiMessage!, isMe: false);
+          setState(() {
+            _initialMessageAdded = true;
+          });
+        }
+      });
+    }
   }
 
   void _showMicPermissionDialog() {

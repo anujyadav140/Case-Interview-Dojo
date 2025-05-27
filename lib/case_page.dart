@@ -1,12 +1,60 @@
+import 'dart:convert';
+import 'package:flutter/material.dart' as material; // Aliased for Colors
+import 'package:http/http.dart' as http;
 import 'package:bartleby/chat.dart';
 import 'package:bartleby/home.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-class CaseInterviewPage extends StatelessWidget {
+class CaseInterviewPage extends StatefulWidget {
   final CaseInterview caseInterview;
 
   const CaseInterviewPage({super.key, required this.caseInterview});
+
+  @override
+  State<CaseInterviewPage> createState() => _CaseInterviewPageState();
+}
+
+class _CaseInterviewPageState extends State<CaseInterviewPage> {
+  String? _initialAiMessage;
+  String? _responseId;
+  bool _isLoadingInitialMessage = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInitialAiMessage();
+  }
+
+  Future<void> _fetchInitialAiMessage() async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/chat/initiate_chat'), // Corrected path
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'case_id': widget.caseInterview.id}),
+      );
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        setState(() {
+          _initialAiMessage = decodedResponse['ai_message'];
+          _responseId = decodedResponse['response_id'];
+          _isLoadingInitialMessage = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load initial message. Status code: ${response.statusCode}';
+          _isLoadingInitialMessage = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error fetching initial message: $e';
+        _isLoadingInitialMessage = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +64,7 @@ class CaseInterviewPage extends StatelessWidget {
     return Scaffold(
       headers: [
         AppBar(
-          title: Text(caseInterview.name),
+          title: Text(widget.caseInterview.name),
           leading: [
             OutlineButton(
               onPressed: () {
@@ -38,7 +86,7 @@ class CaseInterviewPage extends StatelessWidget {
               // Left Pane: occupies 70% of the available width
               Expanded(
                 flex: 7,
-                child: Document(numberOfSteps: 3),
+                child: Document(numberOfSteps: 3), // Assuming Document is defined elsewhere
               ),
               // Divider Pane: fixed width with a vertical divider.
               Container(
@@ -51,9 +99,9 @@ class CaseInterviewPage extends StatelessWidget {
                     VerticalDivider(
                       width: 1,
                       thickness: 1,
-                      color: Colors.gray,
+                      color: material.Colors.grey,
                     ),
-                    SizedBox(width: 8),
+                    material.SizedBox(width: 8),
                   ],
                 ),
               ),
@@ -61,11 +109,19 @@ class CaseInterviewPage extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: Container(
-                  color: Colors.gray[200],
+                  color: material.Colors.grey[200], // Consider theming
                   child: Center(
-                    child: ChatPage(onSpeechResult: (value) {
-                      
-                    },),
+                    child: _isLoadingInitialMessage
+                        ? const material.CircularProgressIndicator() // Assuming shadcn_flutter has its own or use material explicitly
+                        : _errorMessage != null
+                            ? Text('Error: $_errorMessage', style: TextStyle(color: material.Colors.red))
+                            : ChatPage(
+                                onSpeechResult: (value) {
+                                  // Handle speech result if needed
+                                },
+                                initialAiMessage: _initialAiMessage,
+                                initialResponseId: _responseId,
+                              ),
                   ),
                 ),
               ),

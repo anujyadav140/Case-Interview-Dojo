@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Optional
 from pydantic import BaseModel
 from backend.database.models import ChatMessage, CaseInterview 
@@ -34,44 +34,23 @@ async def initiate_chat_session(request_data: InitialChatRequest):
     # Construct a meaningful context for the initial call
     case_context_for_llm = f"Client: {current_case.description.client_name}. Goal: {current_case.description.client_goal}. Situation: {current_case.description.situation_description}"
     
-    # Define or load initial instructions (system prompt for the very first message)
-    # This might be a generic greeting and case introduction prompt
-    initial_instructions = "You are an AI case interviewer. Start by introducing the case to the user and provide any initial instructions or context. The case is about: " + current_case.name
+    # Format the initial instructions using the case name
+    # The global 'initial_instructions' is the template string from prompts.yaml
+    formatted_initial_instructions = initial_instructions.replace("{{case_name}}", current_case.name)
 
-    # Assuming get_ai_response_initial returns a dict like {"response_id": "...", "ai_message": "..."}
-    # or just the message string as per your llm_service.py (line 55 returns string)
-    # Let's adjust based on llm_service.py returning a string for the initial message
-    # and assuming it doesn't return a response_id for the *very first* interaction in this specific function.
-    # Your llm_service.py get_ai_response_initial returns a string.
-    # The client.responses.create might be from a specific OpenAI library version or helper.
-    # For now, I'll assume it returns the message string.
-    # If it's meant to return a dict with response_id, adjust accordingly.
-
-    ai_message_content = await get_ai_response_initial(
-        instructions=initial_instructions, # You'll need to define these
+    # Call the LLM service to get the initial response
+    # get_ai_response_initial is expected to return a Dict {"response_id": ..., "ai_message": ...}
+    llm_response = await get_ai_response_initial(
+        instructions=formatted_initial_instructions,
         current_case_context=case_context_for_llm
     )
-    # If get_ai_response_initial is supposed to give a response_id for follow-up,
-    # you'll need to capture that. For now, assuming it's just the first message.
-    # The concept of response_id seems more for client.responses.create in your llm_service
-    
-    # For the very first message, a response_id to chain might not be applicable
-    # from get_ai_response_initial if it's just a simple completion.
-    # Your follow-up functions *do* use response_id.
-    # This suggests the initial call might need to use a different mechanism or
-    # the `client.responses.create` in `get_ai_response_initial` should also yield an ID.
-    # Let's assume for now the first message doesn't need to provide a response_id back to client,
-    # but the client will need to store this first AI message to build history.
-    # OR, the first call should use a method that gives a response_id.
 
-    # To align with your `get_ai_response_follow_up` which expects a response_id,
-    # the initial interaction should ideally also establish one.
-    # This might mean `get_ai_response_initial` needs to be adapted or you use
-    # a different OpenAI client method that provides a session/thread ID from the start.
+    response_id = llm_response.get("response_id")
+    ai_message = llm_response.get("ai_message")
 
-    # For simplicity in this plan, let's assume the first message is fetched,
-    # and subsequent messages will use a follow-up endpoint.
-    # The "response_id" for the *next* call will be tricky if not returned by initial.
-    # This is a critical point in your llm_service.py design with `client.responses.create`.
+    if ai_message is None:
+        # Handle cases where the LLM service might not return an ai_message as expected
+        # This could be due to an error in llm_service.py or an unexpected API response
+        raise HTTPException(status_code=500, detail="Failed to get AI message from LLM service")
 
-    return AIResponseMessage(ai_message=ai_message_content) # No response_id from initial for now
+    return AIResponseMessage(response_id=response_id, ai_message=ai_message)
