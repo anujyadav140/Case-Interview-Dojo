@@ -47,3 +47,4 @@ app.*.map.json
 venv
 .venv*
 .env*
+.env
